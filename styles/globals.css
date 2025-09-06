@@ -20,7 +20,5 @@ body{margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:var(-
 .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
 .dot{width:10px;height:10px;border-radius:999px;display:inline-block}
 .small{font-size:12px;color:var(--muted)}
-.advanced{margin-top:14px}
-.disclosure{font-size:12px;color:var(--muted);margin-top:8px}
 footer{color:#94a3b8;text-align:center;margin:18px 0 0}
 .hiddenLink{font-size:12px;color:#2563eb;text-decoration:underline;cursor:pointer}

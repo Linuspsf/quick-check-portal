@@ -1,7 +1,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
-import { motion } from 'framer-motion';
 
 const KTS = 75; // fixed
 const SEATS = 20;
@@ -85,22 +84,19 @@ export default function Lite(){
   const [fare, setFare] = useState(120);
   const [preset, setPreset] = useState('M'); // S=10%, M=25%, L=40%
   const [od, setOD] = useState(DEMO_OD); // overlay with /public/data/demand.json if present
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [costNm, setCostNm] = useState(DEFAULT_COST_PER_NM);
+  const [costNm] = useState(DEFAULT_COST_PER_NM);
   const [opsH, setOpsH] = useState(DEFAULT_OPS_H);
-  const [dwellMin, setDwellMin] = useState(DEFAULT_DWELL_MIN);
+  const [dwellMin] = useState(DEFAULT_DWELL_MIN);
   const [load, setLoad] = useState(DEFAULT_LOAD);
 
   useEffect(()=>{ fetch('/data/demand.json').then(r=>r.ok?r.json():null).then(j=>{ if(j) setOD(j); }).catch(()=>{}); },[]);
   useEffect(()=>{
-    // when area changes, default home port to the first port in that area
     const ports = DIST[area].ports;
     if(!ports.includes(home)) setHome(ports[0]);
   }, [area]);
 
   const capture = preset==='S'?0.10:preset==='L'?0.40:0.25;
   const nmM = DIST[area].nm;
-  const ports = DIST[area].ports;
   const allLines = LINES[area].filter(L => L.stops.includes(home)); // only lines that include home port
   const seats = Math.floor(SEATS*load);
 
@@ -119,7 +115,7 @@ export default function Lite(){
 
       const pairs=[];
       for(let i=0;i<line.stops.length-1;i++) pairs.push(key(line.stops[i], line.stops[i+1]));
-      const hub = home; // anchor flows to the chosen home port
+      const hub = home;
       for(const x of line.stops) if(x!==hub) pairs.push(key(hub,x));
 
       const segLoad = s.map(x=>({...x, pax:0}));
@@ -257,7 +253,7 @@ export default function Lite(){
             <span className="badge"><span className="dot" style={{background:'#ef4444'}}/>Variable cost</span>
             <span className="badge"><span className="dot" style={{background:'#0ea5e9'}}/>Gross margin</span>
           </div>
-          <div className="small" style={{marginTop:8}}>Assumes 75 kn, {DEFAULT_OPS_H} ops hrs/day, {DEFAULT_DWELL_MIN} min dwell, {int(DEFAULT_LOAD*100)}% target load. Segments &gt; 500 nm excluded.</div>
+          <div className="small" style={{marginTop:8}}>Assumes 75 kn, {DEFAULT_OPS_H} ops hrs/day, {DEFAULT_DWELL_MIN} min dwell, {Math.round(DEFAULT_LOAD*100)}% target load. Segments &gt; 500 nm excluded.</div>
         </div>
       </div>
 
