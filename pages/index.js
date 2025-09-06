@@ -108,11 +108,13 @@ export default function Lite(){
     for(const line of allLines){
       const s = segs(line.stops, nmM);
       if(!s) continue;
+      const segments = s.length;
       const oneWay = s.reduce((t,sg)=>t+sg.nm/KTS,0);
-      const cycle = 2*oneWay + (2*line.stops.length)*(dwellMin/60);
-      const tripsPerVessel = Math.max(1, Math.floor(opsH / cycle));
+      const cycle = 2*oneWay + (2*line.stops.length)*(dwellMin/60); // hours for full out-and-back
+      const cyclesPerVessel = Math.max(1, Math.floor(opsH / cycle)); // cycles per vessel per day
       const paxTrip = seats;
 
+      // peak load on any segment
       const pairs=[];
       for(let i=0;i<line.stops.length-1;i++) pairs.push(key(line.stops[i], line.stops[i+1]));
       const hub = home;
@@ -133,19 +135,20 @@ export default function Lite(){
         captured += cap;
       }
       const peak = segLoad.reduce((m,x)=>Math.max(m,x.pax),0);
-      const tripsNeeded = Math.ceil(peak/Math.max(paxTrip,1));
-      const vesselsNeeded = Math.ceil(tripsNeeded/Math.max(tripsPerVessel,1));
+      const tripsNeeded = Math.ceil(peak/Math.max(paxTrip,1)); // one-way trips per segment per day
+      const cyclesNeeded = Math.ceil(tripsNeeded/2);           // cycles/day required to cover both directions
+      const vesselsNeeded = Math.ceil(cyclesNeeded/Math.max(cyclesPerVessel,1));
       if(isFinite(vesselsNeeded)) fleet += vesselsNeeded;
 
-      const lineTrips = tripsNeeded;
+      // economics per CYCLE (out-and-back across the line)
       const lineRoundNm = 2*s.reduce((t,sg)=>t+sg.nm,0);
-      const rev = lineTrips * paxTrip * fare;
-      const cost = lineTrips * lineRoundNm * costNm;
+      const revPerCycle = paxTrip * fare * (2*segments); // both directions on each segment
+      const costPerCycle = lineRoundNm * costNm;
 
       dailyPax += captured;
-      dailyRev += rev;
-      dailyCost += cost;
-      lineContrib.push({ name: line.name, color: line.color, rev: rev, margin: Math.max(0, rev - cost) });
+      dailyRev += cyclesNeeded * revPerCycle;
+      dailyCost += cyclesNeeded * costPerCycle;
+      lineContrib.push({ name: line.name, color: line.color, rev: cyclesNeeded*revPerCycle, margin: Math.max(0, cyclesNeeded*(revPerCycle - costPerCycle)) });
     }
 
     const fleetWithReserve = Math.ceil(fleet*(1+RESERVE));
@@ -211,7 +214,7 @@ export default function Lite(){
             <div className="small" style={{marginTop:6}}>We consider only lines that include this port.</div>
           </div>
           <div>
-            <label className="label">Average fare (USD)</label>
+            <label className="label">Average fare per segment (USD)</label>
             <input className="input" type="number" value={fare} onChange={e=>setFare(Number(e.target.value))}/>
           </div>
         </div>

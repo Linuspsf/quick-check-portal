@@ -1,1 +1,1 @@
-Quick Check — LITE v2.0.1: fixed Math.round bug; adds service area + home port picker; money-first charts.
+Quick Check — LITE v2.0.3: correct cycle math (trips vs cycles), fixed fleet sizing and margin; fare is per segment.
