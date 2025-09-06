@@ -1,0 +1,1 @@
+Quick Check — LITE v2: adds service area + home port picker; still money-first charts.
