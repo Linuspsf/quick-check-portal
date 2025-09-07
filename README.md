@@ -1,1 +1,1 @@
-Quick Check — LITE v2.0.3: correct cycle math (trips vs cycles), fixed fleet sizing and margin; fare is per segment.
+Quick Check — LITE v2.1.0: 'area OR home port' flow; Small/Medium/Large are geographic footprints; adds Total annual market (OD pax); hides unprofitable lines.

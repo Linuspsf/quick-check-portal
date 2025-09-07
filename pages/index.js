@@ -51,6 +51,20 @@ const LINES = {
   ]
 };
 
+// geographic bundles for area-first selection
+const BUNDLES = {
+  'Inside Passage (SE Alaska)': {
+    Small: ['JNU-HNS-SGY','JNU-SIT'],
+    Medium: ['JNU-HNS-SGY','JNU-SIT','JNU-PSG-WRG-KTN'],
+    Large: ['JNU-HNS-SGY','JNU-SIT','JNU-PSG-WRG-KTN','JNU-HNH']
+  },
+  'Puget Sound / Salish Sea': {
+    Small: ['SEA-BRE'],
+    Medium: ['SEA-BRE','SEA-TAC'],
+    Large: ['SEA-BRE','SEA-TAC','SEA-EVE-PT']
+  }
+};
+
 // demo OD demand (annual pax) across both areas
 const DEMO_OD = {
   // Inside Passage
@@ -78,16 +92,25 @@ function nm(nmM, a,b){ return (nmM[a]&&nmM[a][b])||(nmM[b]&&nmM[b][a])||null; }
 function segs(stops, nmM){ const s=[]; for(let i=0;i<stops.length-1;i++){ const d=nm(nmM,stops[i],stops[i+1]); if(d==null||d>500) return null; s.push({a:stops[i], b:stops[i+1], nm:d}); } return s; }
 function path(stops, s, a,b){ const i=stops.indexOf(a), j=stops.indexOf(b); if(i<0||j<0) return null; const lo=Math.min(i,j), hi=Math.max(i,j); return s.slice(lo,hi); }
 
+function areaOfPort(port){
+  for(const a of AREAS){
+    if(DIST[a].ports.includes(port)) return a;
+  }
+  return AREAS[0];
+}
+
 export default function Lite(){
+  const [mode, setMode] = useState('area'); // 'area' or 'home'
   const [area, setArea] = useState('Inside Passage (SE Alaska)');
   const [home, setHome] = useState('Juneau, AK');
   const [fare, setFare] = useState(120);
-  const [preset, setPreset] = useState('M'); // S=10%, M=25%, L=40%
-  const [od, setOD] = useState(DEMO_OD); // overlay with /public/data/demand.json if present
+  const [size, setSize] = useState('Medium'); // 'Small'|'Medium'|'Large' footprint
+  const [od, setOD] = useState(DEMO_OD); // can be replaced via /public/data/demand.json
   const [costNm] = useState(DEFAULT_COST_PER_NM);
   const [opsH, setOpsH] = useState(DEFAULT_OPS_H);
   const [dwellMin] = useState(DEFAULT_DWELL_MIN);
   const [load, setLoad] = useState(DEFAULT_LOAD);
+  const capture = 0.25; // fixed for demo; S/M/L now represent geographic footprint
 
   useEffect(()=>{ fetch('/data/demand.json').then(r=>r.ok?r.json():null).then(j=>{ if(j) setOD(j); }).catch(()=>{}); },[]);
   useEffect(()=>{
@@ -95,30 +118,77 @@ export default function Lite(){
     if(!ports.includes(home)) setHome(ports[0]);
   }, [area]);
 
-  const capture = preset==='S'?0.10:preset==='L'?0.40:0.25;
   const nmM = DIST[area].nm;
-  const allLines = LINES[area].filter(L => L.stops.includes(home)); // only lines that include home port
+  const allLines = LINES[area];
+
+  // choose active lines by mode + size
+  const activeLineIds = useMemo(()=>{
+    if(mode==='area'){
+      const bundle = BUNDLES[area][size] || [];
+      return new Set(bundle);
+    } else {
+      const candidate = LINES[areaOfPort(home)].filter(L=>L.stops.includes(home));
+      // score lines by quick margin potential at fixed capture
+      const scores = candidate.map(L=>{
+        const s = segs(L.stops, DIST[areaOfPort(home)].nm); if(!s) return {id:L.id,score:0};
+        const segments = s.length;
+        const oneWay = s.reduce((t,sg)=>t+sg.nm/KTS,0);
+        const cycle = 2*oneWay + (2*L.stops.length)*(dwellMin/60);
+        const cyclesPerVessel = Math.max(1, Math.floor(opsH / cycle));
+        const paxTrip = Math.floor(SEATS*load);
+
+        const pairs=[]; for(let i=0;i<L.stops.length-1;i++) pairs.push(key(L.stops[i],L.stops[i+1]));
+        const segLoad = s.map(x=>({...x,pax:0}));
+        let captured = 0;
+        for(const p of pairs){
+          const annual = od[p]||0; if(!annual) continue;
+          const cap = (annual*capture)/365;
+          const [a,b]=p.split(' ⇄ ');
+          const pathSegs = path(L.stops, s, a, b);
+          if(!pathSegs) continue;
+          for(const ps of pathSegs){
+            const idx = segLoad.findIndex(u=>(u.a===ps.a&&u.b===ps.b)||(u.a===ps.b&&u.b===ps.a));
+            if(idx>=0) segLoad[idx].pax += cap;
+          }
+          captured += cap;
+        }
+        const peak = segLoad.reduce((m,x)=>Math.max(m,x.pax),0);
+        const tripsNeeded = Math.ceil(peak/Math.max(paxTrip,1));
+        const cyclesNeeded = Math.ceil(tripsNeeded/2);
+        const lineRoundNm = 2*s.reduce((t,sg)=>t+sg.nm,0);
+        const revPerCycle = paxTrip * fare * (2*segments);
+        const costPerCycle = lineRoundNm * costNm;
+        const margin = Math.max(0, cyclesNeeded*(revPerCycle-costPerCycle));
+        return { id:L.id, score: margin };
+      });
+      // pick top-N by size
+      const sorted = scores.sort((a,b)=>b.score-a.score).map(x=>x.id);
+      const N = size==='Small' ? Math.min(1, sorted.length) : size==='Medium' ? Math.min(2, sorted.length) : sorted.length;
+      return new Set(sorted.slice(0,N));
+    }
+  }, [mode, area, home, size, load, opsH, dwellMin, fare, od]);
+
   const seats = Math.floor(SEATS*load);
 
   const summary = useMemo(()=>{
-    let dailyPax = 0, dailyRev = 0, dailyCost = 0;
+    let dailyPax = 0, dailyRev = 0, dailyCost = 0, totalOD = 0;
     let fleet = 0;
     const lineContrib = [];
 
-    for(const line of allLines){
+    const active = allLines.filter(L=>activeLineIds.has(L.id));
+    for(const line of active){
       const s = segs(line.stops, nmM);
       if(!s) continue;
       const segments = s.length;
       const oneWay = s.reduce((t,sg)=>t+sg.nm/KTS,0);
-      const cycle = 2*oneWay + (2*line.stops.length)*(dwellMin/60); // hours for full out-and-back
-      const cyclesPerVessel = Math.max(1, Math.floor(opsH / cycle)); // cycles per vessel per day
+      const cycle = 2*oneWay + (2*line.stops.length)*(dwellMin/60);
+      const cyclesPerVessel = Math.max(1, Math.floor(opsH / cycle));
       const paxTrip = seats;
 
-      // peak load on any segment
       const pairs=[];
       for(let i=0;i<line.stops.length-1;i++) pairs.push(key(line.stops[i], line.stops[i+1]));
-      const hub = home;
-      for(const x of line.stops) if(x!==hub) pairs.push(key(hub,x));
+      // total market: sum OD across pairs served by the line
+      for(const p of pairs){ totalOD += (od[p]||0); }
 
       const segLoad = s.map(x=>({...x, pax:0}));
       let captured = 0;
@@ -135,26 +205,31 @@ export default function Lite(){
         captured += cap;
       }
       const peak = segLoad.reduce((m,x)=>Math.max(m,x.pax),0);
-      const tripsNeeded = Math.ceil(peak/Math.max(paxTrip,1)); // one-way trips per segment per day
-      const cyclesNeeded = Math.ceil(tripsNeeded/2);           // cycles/day required to cover both directions
+      const tripsNeeded = Math.ceil(peak/Math.max(paxTrip,1));
+      const cyclesNeeded = Math.ceil(tripsNeeded/2);
       const vesselsNeeded = Math.ceil(cyclesNeeded/Math.max(cyclesPerVessel,1));
       if(isFinite(vesselsNeeded)) fleet += vesselsNeeded;
 
-      // economics per CYCLE (out-and-back across the line)
       const lineRoundNm = 2*s.reduce((t,sg)=>t+sg.nm,0);
-      const revPerCycle = paxTrip * fare * (2*segments); // both directions on each segment
+      const revPerCycle = paxTrip * fare * (2*segments);
       const costPerCycle = lineRoundNm * costNm;
 
+      const lineRev = cyclesNeeded * revPerCycle;
+      const lineCost = cyclesNeeded * costPerCycle;
+      const margin = lineRev - lineCost;
+
       dailyPax += captured;
-      dailyRev += cyclesNeeded * revPerCycle;
-      dailyCost += cyclesNeeded * costPerCycle;
-      lineContrib.push({ name: line.name, color: line.color, rev: cyclesNeeded*revPerCycle, margin: Math.max(0, cyclesNeeded*(revPerCycle - costPerCycle)) });
+      dailyRev += lineRev;
+      dailyCost += lineCost;
+      if(margin > 0.01){ // hide low/no revenue lines
+        lineContrib.push({ name: line.name, color: line.color, margin });
+      }
     }
 
     const fleetWithReserve = Math.ceil(fleet*(1+RESERVE));
     const margin = Math.max(0, dailyRev - dailyCost);
-    return { dailyPax, dailyRev, dailyCost, margin, fleetWithReserve, lineContrib };
-  }, [allLines, nmM, fare, preset, od, opsH, dwellMin, load, costNm, home]);
+    return { dailyPax, dailyRev, dailyCost, margin, fleetWithReserve, lineContrib, totalOD };
+  }, [allLines, activeLineIds, nmM, fare, od, opsH, dwellMin, load, costNm, area]);
 
   const fmt = (n)=>'$'+Math.round(n).toLocaleString();
   const fmtK = (n)=>Math.round(n).toLocaleString();
@@ -175,8 +250,9 @@ export default function Lite(){
 
   function ByLineBars({data}){
     const max = Math.max(...data.map(d=>d.margin), 1);
+    const h = Math.max(60, data.length*28+20);
     return (
-      <svg width="100%" height={data.length*28+20}>
+      <svg width="100%" height={h}>
         {data.map((d, i)=>{
           const w = Math.max(4, Math.round(260*(d.margin/max)));
           const y = i*28 + 12;
@@ -191,51 +267,66 @@ export default function Lite(){
     );
   }
 
+  const areaPorts = DIST[area].ports;
+
   return (
     <div className="container">
       <Head><title>Pacific Seaflight — Quick Check (Lite)</title></Head>
 
       <div className="card">
         <h1 className="h1">Quick Check — Profit Snapshot</h1>
-        <p className="sub">Pick your area and home port. Choose a market size. We’ll estimate daily profits and the fleet needed to capture it.</p>
+        <p className="sub">Start with <b>service area</b> <i>or</i> a <b>home port</b>. Then choose a <b>service footprint</b> (Small / Medium / Large). We’ll estimate profits and the fleet needed to capture ≈25% of that footprint.</p>
 
         <div className="row">
           <div>
+            <label className="label">Start with</label>
+            <div className="toggle">
+              <button className="btn" style={{background: mode==='area'?'#0ea5e9':'#94a3b8'}} onClick={()=>setMode('area')}>Service area</button>
+              <button className="btn" style={{background: mode==='home'?'#0ea5e9':'#94a3b8'}} onClick={()=>{setMode('home'); setArea(areaOfPort(home));}}>Home port</button>
+            </div>
+          </div>
+          <div className={mode==='home'?'disabled':''}>
             <label className="label">Service area</label>
-            <select className="select" value={area} onChange={e=>setArea(e.target.value)}>
+            <select className="select" value={area} onChange={e=>setArea(e.target.value)} disabled={mode==='home'}>
               {AREAS.map(a=>(<option key={a}>{a}</option>))}
             </select>
           </div>
-          <div>
+          <div className={mode==='area'?'disabled':''}>
             <label className="label">Home port</label>
-            <select className="select" value={home} onChange={e=>setHome(e.target.value)}>
+            <select className="select" value={home} onChange={e=>{setHome(e.target.value); setArea(areaOfPort(e.target.value));}} disabled={mode==='area'}>
               {DIST[area].ports.map(p=>(<option key={p}>{p}</option>))}
             </select>
-            <div className="small" style={{marginTop:6}}>We consider only lines that include this port.</div>
-          </div>
-          <div>
-            <label className="label">Average fare per segment (USD)</label>
-            <input className="input" type="number" value={fare} onChange={e=>setFare(Number(e.target.value))}/>
           </div>
         </div>
 
         <div className="row">
           <div>
-            <label className="label">Market size</label>
+            <label className="label">Service footprint</label>
             <div style={{display:'flex',gap:8}}>
-              <button className="btn" style={{background:preset==='S'?'#eab308':'#94a3b8'}} onClick={()=>setPreset('S')}>Small</button>
-              <button className="btn" style={{background:preset==='M'?'#0ea5e9':'#94a3b8'}} onClick={()=>setPreset('M')}>Medium</button>
-              <button className="btn" style={{background:preset==='L'?'#22c55e':'#94a3b8'}} onClick={()=>setPreset('L')}>Large</button>
+              <button className="btn" style={{background:size==='Small'?'#eab308':'#94a3b8'}} onClick={()=>setSize('Small')}>Small</button>
+              <button className="btn" style={{background:size==='Medium'?'#0ea5e9':'#94a3b8'}} onClick={()=>setSize('Medium')}>Medium</button>
+              <button className="btn" style={{background:size==='Large'?'#22c55e':'#94a3b8'}} onClick={()=>setSize('Large')}>Large</button>
             </div>
-            <div className="small" style={{marginTop:6}}>Small≈10% • Medium≈25% • Large≈40% capture</div>
+            <div className="small" style={{marginTop:6}}>Small ⟶ compact subset • Medium ⟶ add nearby lines • Large ⟶ full footprint</div>
           </div>
+          <div>
+            <label className="label">Average fare per segment (USD)</label>
+            <input className="input" type="number" value={fare} onChange={e=>setFare(Number(e.target.value))}/>
+          </div>
+          <div>
+            <label className="label">Load factor (advanced)</label>
+            <input className="input" type="number" step="0.05" value={load} onChange={e=>setLoad(Number(e.target.value))}/>
+          </div>
+        </div>
+
+        <div className="row">
           <div>
             <label className="label">Ops hrs/day (advanced)</label>
             <input className="input" type="number" value={opsH} onChange={e=>setOpsH(Number(e.target.value))}/>
           </div>
           <div>
-            <label className="label">Load factor (advanced)</label>
-            <input className="input" type="number" step="0.05" value={load} onChange={e=>setLoad(Number(e.target.value))}/>
+            <label className="label">Assumptions</label>
+            <div className="small">75 kn cruise · 12 min dwell · 25% capture of footprint</div>
           </div>
         </div>
 
@@ -244,6 +335,7 @@ export default function Lite(){
           <div className="kpi"><div className="v">{fmt(summary.margin*365)}</div><div className="t">Potential annual gross margin</div></div>
           <div className="kpi"><div className="v">{fmtK(Math.round(summary.dailyPax))}</div><div className="t">Passengers served / day</div></div>
           <div className="kpi"><div className="v">{summary.fleetWithReserve}</div><div className="t">Recommended fleet (incl. reserve)</div></div>
+          <div className="kpi"><div className="v">{fmtK(summary.totalOD)}</div><div className="t">Total annual market (OD pax)</div></div>
         </div>
       </div>
 
@@ -256,7 +348,7 @@ export default function Lite(){
             <span className="badge"><span className="dot" style={{background:'#ef4444'}}/>Variable cost</span>
             <span className="badge"><span className="dot" style={{background:'#0ea5e9'}}/>Gross margin</span>
           </div>
-          <div className="small" style={{marginTop:8}}>Assumes 75 kn, {DEFAULT_OPS_H} ops hrs/day, {DEFAULT_DWELL_MIN} min dwell, {Math.round(DEFAULT_LOAD*100)}% target load. Segments &gt; 500 nm excluded.</div>
+          <div className="small" style={{marginTop:8}}>Segments &gt; 500 nm excluded. Demo datasets shown.</div>
         </div>
       </div>
 
