@@ -10,5 +10,23 @@
     "market_baseline_fare": 120,
     "ops_hours": 12,
     "dwell_min": 12
+  },
+  "Inside Passage (SE Alaska)": {
+    "capture": {
+      "Small": 0.25,
+      "Medium": 0.6,
+      "Large": 1.0
+    },
+    "cost_per_nm": 8.0,
+    "freight_mail_uplift": 0.35
+  },
+  "Puget Sound / Salish Sea": {
+    "capture": {
+      "Small": 0.25,
+      "Medium": 0.6,
+      "Large": 1.0
+    },
+    "cost_per_nm": 8.0,
+    "freight_mail_uplift": 0.35
   }
 }
