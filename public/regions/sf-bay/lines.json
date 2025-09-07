@@ -9,21 +9,85 @@
     "color": "#ef4444"
   },
   {
-    "id": "SF-VALLEJO",
+    "id": "SF-ALA",
+    "name": "San Francisco\u2014Alameda",
+    "stops": [
+      "San Francisco, CA",
+      "Alameda, CA"
+    ],
+    "color": "#f97316"
+  },
+  {
+    "id": "SF-VAL",
     "name": "San Francisco\u2014Vallejo",
     "stops": [
       "San Francisco, CA",
       "Vallejo, CA"
     ],
-    "color": "#10b981"
+    "color": "#22c55e"
   },
   {
-    "id": "SF-SJ",
-    "name": "San Francisco\u2014San Jose",
+    "id": "SF-RIC",
+    "name": "San Francisco\u2014Richmond",
     "stops": [
       "San Francisco, CA",
-      "San Jose, CA"
+      "Richmond, CA"
     ],
-    "color": "#7c3aed"
+    "color": "#06b6d4"
+  },
+  {
+    "id": "SF-LRK",
+    "name": "San Francisco\u2014Larkspur",
+    "stops": [
+      "San Francisco, CA",
+      "Larkspur, CA"
+    ],
+    "color": "#84cc16"
+  },
+  {
+    "id": "SF-SAU",
+    "name": "San Francisco\u2014Sausalito",
+    "stops": [
+      "San Francisco, CA",
+      "Sausalito, CA"
+    ],
+    "color": "#a855f7"
+  },
+  {
+    "id": "SF-TIB",
+    "name": "San Francisco\u2014Tiburon",
+    "stops": [
+      "San Francisco, CA",
+      "Tiburon, CA"
+    ],
+    "color": "#f43f5e"
+  },
+  {
+    "id": "SSF-ALA-OAK",
+    "name": "South San Francisco\u2014Alameda\u2014Oakland",
+    "stops": [
+      "South San Francisco, CA",
+      "Alameda, CA",
+      "Oakland, CA"
+    ],
+    "color": "#14b8a6"
+  },
+  {
+    "id": "SF-BERK",
+    "name": "San Francisco\u2014Berkeley",
+    "stops": [
+      "San Francisco, CA",
+      "Berkeley, CA"
+    ],
+    "color": "#0ea5e9"
+  },
+  {
+    "id": "SF-RWC",
+    "name": "San Francisco\u2014Redwood City",
+    "stops": [
+      "San Francisco, CA",
+      "Redwood City, CA"
+    ],
+    "color": "#10b981"
   }
 ]

@@ -1,26 +1,29 @@
 [
   {
-    "port": "San Francisco, CA",
-    "airports": [
-      "SFO"
-    ]
+    "port": "Alameda, CA"
   },
   {
-    "port": "Oakland, CA",
-    "airports": [
-      "OAK"
-    ]
+    "port": "Albany, CA"
   },
   {
-    "port": "San Jose, CA",
-    "airports": [
-      "SJC"
-    ]
+    "port": "East Palo Alto, CA"
   },
   {
-    "port": "Vallejo, CA",
-    "airports": [
-      "APC"
-    ]
+    "port": "Hercules, CA"
+  },
+  {
+    "port": "Napa Department of Public Works, CA"
+  },
+  {
+    "port": "Napa Parks Department, CA"
+  },
+  {
+    "port": "Napa Public Works Dept, CA"
+  },
+  {
+    "port": "Redwood, CA"
+  },
+  {
+    "port": "Vallejo, CA"
   }
 ]

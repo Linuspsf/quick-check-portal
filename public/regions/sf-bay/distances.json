@@ -1,14 +1,48 @@
 {
   "San Francisco, CA": {
     "Oakland, CA": 7,
+    "Alameda, CA": 7,
     "Vallejo, CA": 27,
-    "San Jose, CA": 44
+    "Richmond, CA": 12,
+    "Larkspur, CA": 13,
+    "Sausalito, CA": 6,
+    "Tiburon, CA": 6,
+    "Berkeley, CA": 7,
+    "Redwood City, CA": 22
+  },
+  "Alameda, CA": {
+    "Oakland, CA": 3,
+    "South San Francisco, CA": 11,
+    "San Francisco, CA": 7
+  },
+  "South San Francisco, CA": {
+    "Oakland, CA": 12,
+    "Alameda, CA": 11
   },
   "Oakland, CA": {
-    "Vallejo, CA": 23,
-    "San Jose, CA": 39
+    "San Francisco, CA": 7,
+    "Alameda, CA": 3,
+    "South San Francisco, CA": 12
   },
   "Vallejo, CA": {
-    "San Jose, CA": 60
+    "San Francisco, CA": 27
+  },
+  "Richmond, CA": {
+    "San Francisco, CA": 12
+  },
+  "Larkspur, CA": {
+    "San Francisco, CA": 13
+  },
+  "Sausalito, CA": {
+    "San Francisco, CA": 6
+  },
+  "Tiburon, CA": {
+    "San Francisco, CA": 6
+  },
+  "Berkeley, CA": {
+    "San Francisco, CA": 7
+  },
+  "Redwood City, CA": {
+    "San Francisco, CA": 22
   }
 }
