@@ -1,0 +1,14 @@
+{
+  "San Francisco, CA": {
+    "Oakland, CA": 7,
+    "Vallejo, CA": 27,
+    "San Jose, CA": 44
+  },
+  "Oakland, CA": {
+    "Vallejo, CA": 23,
+    "San Jose, CA": 39
+  },
+  "Vallejo, CA": {
+    "San Jose, CA": 60
+  }
+}

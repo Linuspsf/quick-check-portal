@@ -1,0 +1,12 @@
+{
+  "regions": [
+    {
+      "slug": "sf-bay",
+      "name": "San Francisco Bay (CA)"
+    },
+    {
+      "slug": "lake-michigan",
+      "name": "Lake Michigan (IL/WI/MI)"
+    }
+  ]
+}

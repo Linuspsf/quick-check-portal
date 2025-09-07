@@ -1,0 +1,27 @@
+[
+  {
+    "port": "Chicago, IL",
+    "airports": [
+      "ORD",
+      "MDW"
+    ]
+  },
+  {
+    "port": "Milwaukee, WI",
+    "airports": [
+      "MKE"
+    ]
+  },
+  {
+    "port": "Racine, WI",
+    "airports": [
+      "RAC"
+    ]
+  },
+  {
+    "port": "Muskegon, MI",
+    "airports": [
+      "MKG"
+    ]
+  }
+]

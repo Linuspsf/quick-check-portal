@@ -1,0 +1,29 @@
+[
+  {
+    "id": "CHI-MKE",
+    "name": "Chicago\u2014Milwaukee",
+    "stops": [
+      "Chicago, IL",
+      "Milwaukee, WI"
+    ],
+    "color": "#ef4444"
+  },
+  {
+    "id": "CHI-RACINE",
+    "name": "Chicago\u2014Racine",
+    "stops": [
+      "Chicago, IL",
+      "Racine, WI"
+    ],
+    "color": "#10b981"
+  },
+  {
+    "id": "MKE-MKG",
+    "name": "Milwaukee\u2014Muskegon",
+    "stops": [
+      "Milwaukee, WI",
+      "Muskegon, MI"
+    ],
+    "color": "#7c3aed"
+  }
+]

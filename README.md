@@ -1,4 +1,9 @@
-Quick Check — LITE v2.3.0
-- Runtime calibration via public/data/calibration.json (capture %, cost_per_nm, freight_mail_uplift, market_baseline_fare, ops_hours, dwell_min).
-- Total market (annual $) constant for Area/Home; uses baseline fare + freight/mail uplift.
-- "≈" on fleet to avoid false precision. Area or Home flows; hides low/no-revenue lines.
+
+# Quick Check — LITE v2.4.1
+
+- 20-min default port dwell
+- Sticky CTA + 3-step follow-up modal (Download PDF, Request full pro forma)
+- Client-side PDF (html2canvas + jsPDF)
+- Region discovery via `public/regions/manifest.json`
+- Region kits for **SF Bay** and **Lake Michigan** (replace `demand.json` with TranStats-derived values when ready)
+- API stubs: `/api/lead` (optional webhook), `/api/send` (placeholder)

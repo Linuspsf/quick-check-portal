@@ -1,0 +1,26 @@
+[
+  {
+    "port": "San Francisco, CA",
+    "airports": [
+      "SFO"
+    ]
+  },
+  {
+    "port": "Oakland, CA",
+    "airports": [
+      "OAK"
+    ]
+  },
+  {
+    "port": "San Jose, CA",
+    "airports": [
+      "SJC"
+    ]
+  },
+  {
+    "port": "Vallejo, CA",
+    "airports": [
+      "APC"
+    ]
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "SF-OAK",
+    "name": "San Francisco\u2014Oakland",
+    "stops": [
+      "San Francisco, CA",
+      "Oakland, CA"
+    ],
+    "color": "#ef4444"
+  },
+  {
+    "id": "SF-VALLEJO",
+    "name": "San Francisco\u2014Vallejo",
+    "stops": [
+      "San Francisco, CA",
+      "Vallejo, CA"
+    ],
+    "color": "#10b981"
+  },
+  {
+    "id": "SF-SJ",
+    "name": "San Francisco\u2014San Jose",
+    "stops": [
+      "San Francisco, CA",
+      "San Jose, CA"
+    ],
+    "color": "#7c3aed"
+  }
+]

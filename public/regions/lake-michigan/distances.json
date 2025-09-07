@@ -1,0 +1,12 @@
+{
+  "Chicago, IL": {
+    "Milwaukee, WI": 67,
+    "Racine, WI": 56
+  },
+  "Milwaukee, WI": {
+    "Muskegon, MI": 84
+  },
+  "Racine, WI": {
+    "Muskegon, MI": 98
+  }
+}
