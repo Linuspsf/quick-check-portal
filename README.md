@@ -1,1 +1,5 @@
-Quick Check — LITE v2.1.0: 'area OR home port' flow; Small/Medium/Large are geographic footprints; adds Total annual market (OD pax); hides unprofitable lines.
+Quick Check — LITE v2.2.0
+- 'Area OR Home port' flow
+- Small/Medium/Large = capture % of service area (25/60/100)
+- Total market (annual $) = pax * baseline price * segments with +35% freight/mail demo uplift; constant per Area/Home
+- Unprofitable lines hidden
